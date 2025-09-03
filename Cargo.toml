@@ -1,0 +1,21 @@
+[package]
+name = "terminal-type"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "terminal-type"
+path = "src/main.rs"
+
+[dependencies]
+ratatui = "0.24"
+crossterm = "0.27"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+chrono = { version = "0.4", features = ["serde"] }
+rand = "0.8"
+anyhow = "1.0"
+clap = { version = "4.4", features = ["derive"] }
+dirs = "5.0"
+
