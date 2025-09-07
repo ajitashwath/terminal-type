@@ -1,12 +1,11 @@
 use std::time::{Duration, Instant};
-use std::sync::{Arc, Mutex};
 
 use crate::{app::TestMode, config::Config, utils};
 
 pub struct Test {
     text: String,
     mode: TestMode,
-    start_time: Arc<Mutex<Option<Instant>>>,
+    start_time: Option<Instant>,
     duration_limit: Option<Duration>,
     word_limit: Option<usize>,
 }
@@ -30,16 +29,15 @@ impl Test {
         Ok(Self {
             text,
             mode: mode.clone(),
-            start_time: Arc::new(Mutex::new(None)),
+            start_time: None,
             duration_limit,
             word_limit,
         })
     }
 
-    pub fn start(&self) {
-        let mut start_time = self.start_time.lock().unwrap();
-        if start_time.is_none() {
-            *start_time = Some(Instant::now());
+    pub fn start(&mut self) {
+        if self.start_time.is_none() {
+            self.start_time = Some(Instant::now());
         }
     }
 
@@ -52,7 +50,6 @@ impl Test {
     }
 
     pub fn is_complete(&self) -> bool {
-        // Check time limit
         if let Some(duration_limit) = self.duration_limit {
             if self.elapsed_time() >= duration_limit {
                 return true;
@@ -62,8 +59,7 @@ impl Test {
     }
 
     pub fn elapsed_time(&self) -> Duration {
-        let start_time = self.start_time.lock().unwrap();
-        if let Some(start) = *start_time {
+        if let Some(start) = self.start_time {
             start.elapsed()
         } else {
             Duration::from_secs(0)
@@ -83,7 +79,7 @@ impl Test {
         }
     }
 
-    fn generate_text_for_duration(seconds: u32, config: &Config) -> Result<String, Box<dyn std::error::Error>> {
+    fn generate_text_for_duration(seconds: u32, _config: &Config) -> Result<String, Box<dyn std::error::Error>> {
         let estimated_wpm = 40.0;
         let minutes = seconds as f64 / 60.0;
         let estimated_words = (estimated_wpm * minutes * 1.2) as usize;
@@ -113,6 +109,7 @@ pub fn get_random_sample_text() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    
     #[test]
     fn test_word_count_mode() {
         let config = Config::default();
@@ -147,7 +144,7 @@ mod tests {
     fn test_elapsed_time() {
         let config = Config::default();
         let mode = TestMode::WordCount(5);
-        let test = Test::new(&mode, &config).unwrap();
+        let mut test = Test::new(&mode, &config).unwrap();
         assert_eq!(test.elapsed_time(), Duration::from_secs(0));
         test.start();
         std::thread::sleep(Duration::from_millis(10));

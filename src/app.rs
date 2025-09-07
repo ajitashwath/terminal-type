@@ -1,10 +1,9 @@
 use anyhow::Result;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use std::time::Instant;
+use crossterm::event::{KeyCode, KeyEvent};
 
 use crate::{config::Config, history::History, input::InputHandler, stats::Stats, test::Test};
 
-pub type AppResult<T> = Result<T, Box<dyn std::error::Error>>;;
+pub type AppResult<T> = Result<T, Box<dyn std::error::Error>>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Screen {
@@ -32,7 +31,7 @@ impl TestMode {
 }
 
 pub struct App {
-    pub should_quit:bool,
+    pub should_quit: bool,
     pub current_screen: Screen,
     pub config: Config,
     pub history: History,
@@ -88,7 +87,7 @@ impl App {
     }
 
     pub fn can_quit(&self) -> bool {
-        matches!(self.current_screen, Screen::Menu | Screen::Results | Screen:History)
+        matches!(self.current_screen, Screen::Menu | Screen::Results | Screen::History)
     }
 
     pub fn handle_key_event(&mut self, key: KeyEvent) -> AppResult<()> {
@@ -137,7 +136,7 @@ impl App {
             return Ok(());
         }
         if let Some(test) = &mut self.test {
-            let result = self.input_handler.handle_key(key, test)?;
+            self.input_handler.handle_key(key, test)?;
             if test.is_complete() {
                 let stats = Stats::calculate(test, &self.input_handler);
                 self.history.add_result(&stats)?;
@@ -145,6 +144,19 @@ impl App {
                 self.current_screen = Screen::Results;
                 self.test = None;
             }
+        }
+        Ok(())
+    }
+
+    fn handle_results_key(&mut self, key: KeyEvent) -> AppResult<()> {
+        match key.code {
+            KeyCode::Char('r') | KeyCode::Char('R') => {
+                self.start_test()?;
+            }
+            KeyCode::Char('m') | KeyCode::Char('M') | KeyCode::Esc => {
+                self.current_screen = Screen::Menu;
+            }
+            _ => {}
         }
         Ok(())
     }

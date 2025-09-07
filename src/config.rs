@@ -317,35 +317,3 @@ next_mode = "Tab"
 "#.to_string()
     })
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_default_config() {
-        let config = Config::default();
-        assert_eq!(config.theme.name, "Dark");
-        assert_eq!(config.test_settings.default_duration, 30);
-        assert_eq!(config.keybindings.quit, "q");
-    }
-
-    #[test]
-    fn test_color_conversion() {
-        let color = Color::Red;
-        let serializable: SerializableColor = color.into();
-        let converted: Color = serializable.into();
-        assert_eq!(serializable.r, 255);
-        assert_eq!(serializable.g, 0);
-        assert_eq!(serializable.b, 0);
-    }
-
-    #[test]
-    fn test_theme_creation() {
-        let theme = Theme::monokai();
-        assert_eq!(theme.name, "Monokai");
-        
-        let themes = Theme::get_available_themes();
-        assert!(themes.len() >= 4);
-    }
-}

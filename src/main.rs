@@ -1,4 +1,4 @@
-use anyhow::{Ok, Result};
+use anyhow::Result;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
@@ -27,32 +27,30 @@ fn main() -> Result<()> {
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
-    
     let app = App::new()?;
     let res = run_app(&mut terminal, app);
 
     disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen, DisableMouseCapture)?;
+    execute!(
+        terminal.backend_mut(),
+        LeaveAlternateScreen,
+        DisableMouseCapture
+    )?;
     terminal.show_cursor()?;
-
-    if let Err(err) = res {
-        println!("{err:?}");
-    }
-    Ok(())
+    res
 }
 
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> AppResult<()> {
     loop {
-        terminal.draw(|f| ui::draw(f, &mut app))?;
+        terminal.draw(|f| ui::draw::<B>(f, &mut app))?;
+
         if let Event::Key(key) = event::read()? {
-            match key.code {
-                KeyCode::Char('q') if app.can_quit() => return Ok(()),
-                _ => {
-                    app.handle_key_event(key)?;
-                    if app.should_quit {
-                        return Ok(());
-                    }
-                }
+            if key.code == KeyCode::Char('q') && app.can_quit() {
+                return Ok(());
+            }
+            app.handle_key_event(key)?;
+            if app.should_quit {
+                return Ok(());
             }
         }
     }
