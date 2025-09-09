@@ -2,15 +2,12 @@ use ratatui::{
     backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    symbols,
-    text::{Line, Span, Text},
+    text::{Line, Span},
     widgets::{
-        block::{Position, Title},
-        Block, Borders, Clear, Gauge, List, ListItem, ListState, Paragraph, Wrap,
+        Block, Borders, Gauge, List, ListItem, ListState, Paragraph, Wrap,
     },
     Frame,
 };
-use std::time::Instant;
 
 use crate::app::{App, Screen};
 

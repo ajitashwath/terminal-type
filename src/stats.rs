@@ -209,8 +209,6 @@ impl ImprovementStats {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{app::TestMode, config::Config, input::{InputHandler, KeystrokeData}};
-    use std::time::Instant;
     #[test]
     fn test_stats_calculation() {
         let stats = Stats {

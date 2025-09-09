@@ -79,7 +79,7 @@ impl Test {
         }
     }
 
-    fn generate_text_for_duration(seconds: u32, _config: &Config) -> Result<String, Box<dyn std::error::Error>> {
+    fn generate_text_for_duration(seconds: usize, _config: &Config) -> Result<String, Box<dyn std::error::Error>> {
         let estimated_wpm = 40.0;
         let minutes = seconds as f64 / 60.0;
         let estimated_words = (estimated_wpm * minutes * 1.2) as usize;

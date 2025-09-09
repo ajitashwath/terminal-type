@@ -161,7 +161,7 @@ pub fn generate_pangram_text(repeat_count: usize) -> String {
 }
 
 pub fn generate_number_practice(count: usize) -> String {
-    let mut rng = thread_rng();
+    let _rng = thread_rng();
     let mut parts = Vec::new();
     
     for _ in 0..count {
