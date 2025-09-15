@@ -9,6 +9,7 @@ pub enum Screen {
     Test,
     Results,
     History,
+    ModeSelection,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -85,7 +86,7 @@ impl App {
     }
 
     pub fn can_quit(&self) -> bool {
-        matches!(self.current_screen, Screen::Menu | Screen::Results | Screen::History)
+        matches!(self.current_screen, Screen::Menu | Screen::Results | Screen::History | Screen::ModeSelection)
     }
 
     pub fn handle_key_event(&mut self, key: KeyEvent) -> Result<()> {
@@ -94,6 +95,7 @@ impl App {
             Screen::Test => self.handle_test_key(key),
             Screen::Results => self.handle_results_key(key),
             Screen::History => self.handle_history_key(key),
+            Screen::ModeSelection => self.handle_mode_selection_key(key),
         }
     }
 
@@ -127,15 +129,47 @@ impl App {
         Ok(())
     }
 
+    fn handle_mode_selection_key(&mut self, key: KeyEvent) -> Result<()> {
+        match key.code {
+            KeyCode::Up | KeyCode::Char('k') => {
+                if self.selected_mode_index > 0 {
+                    self.selected_mode_index -= 1;
+                }
+            }
+            KeyCode::Down | KeyCode::Char('j') => {
+                if self.selected_mode_index < self.available_modes.len() - 1 {
+                    self.selected_mode_index += 1;
+                }
+            }
+            KeyCode::Enter => {
+                self.current_mode = self.available_modes[self.selected_mode_index].clone();
+                self.current_screen = Screen::Menu;
+            }
+            KeyCode::Esc | KeyCode::Char('m') => {
+                self.current_screen = Screen::Menu;
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+
     fn handle_test_key(&mut self, key: KeyEvent) -> Result<()> {
         if key.code == KeyCode::Esc {
             self.current_screen = Screen::Menu;
             self.test = None;
             return Ok(());
         }
+
         if let Some(test) = &mut self.test {
+            let text_before = self.input_handler.get_typed_text().to_string();
+            
             self.input_handler.handle_key(key, test).map_err(|e| anyhow::anyhow!("{}", e))?;
-            if test.is_complete() {
+            
+            let text_after = self.input_handler.get_typed_text();
+            let target_text = test.get_text();
+
+            // Check if test is complete - either time ran out OR user finished typing the text
+            if test.is_complete() || text_after.len() >= target_text.len() {
                 let stats = Stats::calculate(test, &self.input_handler);
                 self.history.add_result(&stats).map_err(|e| anyhow::anyhow!("{}", e))?;
                 self.last_stats = Some(stats);
@@ -188,8 +222,7 @@ impl App {
     }
 
     fn show_mode_selection(&mut self) {
-        self.selected_mode_index = (self.selected_mode_index + 1) % self.available_modes.len();
-        self.current_mode = self.available_modes[self.selected_mode_index].clone();
+        self.current_screen = Screen::ModeSelection;
     }
 
     fn show_history(&mut self) {

@@ -16,6 +16,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Screen::Test => draw_test(f, app),
         Screen::Results => draw_results(f, app),
         Screen::History => draw_history(f, app),
+        Screen::ModeSelection => draw_mode_selection(f, app),
     }
 }
 
@@ -26,7 +27,7 @@ fn draw_menu(f: &mut Frame, app: &App) {
         .split(f.size());
 
     // Title
-    let title = Paragraph::new("🎯 Terminal Typing Test")
+    let title = Paragraph::new("Terminal Typing Test")
         .style(Style::default().fg(app.config.theme.accent()))
         .alignment(Alignment::Center)
         .block(
@@ -106,6 +107,67 @@ fn draw_menu(f: &mut Frame, app: &App) {
                 .border_style(Style::default().fg(app.config.theme.border())),
         );
     f.render_widget(footer, chunks[2]);
+}
+
+fn draw_mode_selection(f: &mut Frame, app: &App) {
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(3)])
+        .split(f.size());
+
+    // Title
+    let title = Paragraph::new("⚙️ Select Test Mode")
+        .style(Style::default().fg(app.config.theme.accent()))
+        .alignment(Alignment::Center)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(app.config.theme.border())),
+        );
+    f.render_widget(title, chunks[0]);
+
+    // Mode list
+    let mode_items: Vec<ListItem> = app
+        .available_modes
+        .iter()
+        .enumerate()
+        .map(|(i, mode)| {
+            let style = if i == app.selected_mode_index {
+                Style::default()
+                    .fg(app.config.theme.highlight())
+                    .add_modifier(Modifier::BOLD)
+            } else {
+                Style::default().fg(app.config.theme.text())
+            };
+            
+            let indicator = if i == app.selected_mode_index { "► " } else { "  " };
+            let display = format!("{}{}", indicator, mode.display_name());
+            
+            ListItem::new(display).style(style)
+        })
+        .collect();
+
+    let mode_list = List::new(mode_items)
+        .block(
+            Block::default()
+                .title("Available Modes")
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(app.config.theme.border())),
+        )
+        .style(Style::default().fg(app.config.theme.text()));
+
+    f.render_widget(mode_list, chunks[1]);
+
+    // Instructions
+    let instructions = Paragraph::new("↑/↓ to navigate, Enter to select, Esc/M to return to menu")
+        .style(Style::default().fg(app.config.theme.muted()))
+        .alignment(Alignment::Center)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(app.config.theme.border())),
+        );
+    f.render_widget(instructions, chunks[2]);
 }
 
 fn draw_test(f: &mut Frame, app: &mut App) {
@@ -211,13 +273,16 @@ fn draw_test_progress(f: &mut Frame, area: Rect, app: &App, test: &crate::test::
 fn draw_text_area(f: &mut Frame, area: Rect, app: &App, test: &crate::test::Test) {
     let text = test.get_text();
     let typed = app.input_handler.get_typed_text();
-    let current_pos = typed.len();
+    let current_pos = typed.chars().count(); // Use char count for proper positioning
     let mut spans = Vec::new();
 
-    for (i, ch) in text.chars().enumerate() {
+    let text_chars: Vec<char> = text.chars().collect();
+    let typed_chars: Vec<char> = typed.chars().collect();
+
+    for (i, &ch) in text_chars.iter().enumerate() {
         let style = if i < current_pos {
             // Already typed
-            if let Some(typed_char) = typed.chars().nth(i) {
+            if let Some(&typed_char) = typed_chars.get(i) {
                 if typed_char == ch {
                     Style::default().fg(app.config.theme.correct())
                 } else {

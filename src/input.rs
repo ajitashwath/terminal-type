@@ -51,8 +51,12 @@ impl InputHandler {
 
     fn handle_character(&mut self, ch: char, timestamp: Instant, test: &Test) {
         let target_text = test.get_text();
-        let current_pos = self.typed_text.len();
-        if current_pos >= target_text.len() { return; }
+        let current_pos = self.typed_text.chars().count(); // Use char count, not byte length
+        
+        // Don't allow typing beyond the target text
+        if current_pos >= target_text.chars().count() { 
+            return; 
+        }
         
         let expected_char = target_text.chars().nth(current_pos);
         let is_correct = expected_char == Some(ch);
@@ -91,10 +95,12 @@ impl InputHandler {
     }
 
     pub fn get_progress(&self, target_text: &str) -> f64 {
-        if target_text.is_empty() {
+        let target_char_count = target_text.chars().count();
+        if target_char_count == 0 {
             return 1.0;
         }
-        self.typed_text.len() as f64 / target_text.len() as f64
+        let typed_char_count = self.typed_text.chars().count();
+        (typed_char_count as f64 / target_char_count as f64).min(1.0)
     }
 
     pub fn get_typed_words(&self) -> usize {
