@@ -1,17 +1,16 @@
 use ratatui::{
-    backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{
-        Block, Borders, Gauge, List, ListItem, ListState, Paragraph, Wrap,
+        Block, Borders, Gauge, List, ListItem, Paragraph, Wrap,
     },
     Frame,
 };
 
 use crate::app::{App, Screen};
 
-pub fn draw<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+pub fn draw(f: &mut Frame, app: &mut App) {
     match app.current_screen {
         Screen::Menu => draw_menu(f, app),
         Screen::Test => draw_test(f, app),
@@ -20,7 +19,7 @@ pub fn draw<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     }
 }
 
-fn draw_menu<B: Backend>(f: &mut Frame<B>, app: &App) {
+fn draw_menu(f: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(3)])
@@ -28,12 +27,12 @@ fn draw_menu<B: Backend>(f: &mut Frame<B>, app: &App) {
 
     // Title
     let title = Paragraph::new("🎯 Terminal Typing Test")
-        .style(Style::default().fg(app.config.theme.accent))
+        .style(Style::default().fg(app.config.theme.accent()))
         .alignment(Alignment::Center)
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(app.config.theme.border)),
+                .border_style(Style::default().fg(app.config.theme.border())),
         );
     f.render_widget(title, chunks[0]);
 
@@ -49,10 +48,10 @@ fn draw_menu<B: Backend>(f: &mut Frame<B>, app: &App) {
         .map(|(i, item)| {
             let style = if i == app.selected_menu_item {
                 Style::default()
-                    .fg(app.config.theme.highlight)
+                    .fg(app.config.theme.highlight())
                     .add_modifier(Modifier::BOLD)
             } else {
-                Style::default().fg(app.config.theme.text)
+                Style::default().fg(app.config.theme.text())
             };
             ListItem::new(format!("{}. {}", i + 1, item)).style(style)
         })
@@ -63,18 +62,18 @@ fn draw_menu<B: Backend>(f: &mut Frame<B>, app: &App) {
             Block::default()
                 .title("Menu")
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(app.config.theme.border)),
+                .border_style(Style::default().fg(app.config.theme.border())),
         )
-        .style(Style::default().fg(app.config.theme.text));
+        .style(Style::default().fg(app.config.theme.text()));
 
     f.render_widget(menu_list, main_chunks[0]);
 
     let mode_info = vec![
         Line::from(vec![
-            Span::styled("Current Mode: ", Style::default().fg(app.config.theme.text)),
+            Span::styled("Current Mode: ", Style::default().fg(app.config.theme.text())),
             Span::styled(
                 app.current_mode.display_name(),
-                Style::default().fg(app.config.theme.accent),
+                Style::default().fg(app.config.theme.accent()),
             ),
         ]),
         Line::from(""),
@@ -90,26 +89,26 @@ fn draw_menu<B: Backend>(f: &mut Frame<B>, app: &App) {
             Block::default()
                 .title("Info")
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(app.config.theme.border)),
+                .border_style(Style::default().fg(app.config.theme.border())),
         )
-        .style(Style::default().fg(app.config.theme.text))
+        .style(Style::default().fg(app.config.theme.text()))
         .wrap(Wrap { trim: true });
 
     f.render_widget(info_panel, main_chunks[1]);
 
     // Footer
     let footer = Paragraph::new("Press Enter to start, or use number keys for quick selection")
-        .style(Style::default().fg(app.config.theme.muted))
+        .style(Style::default().fg(app.config.theme.muted()))
         .alignment(Alignment::Center)
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(app.config.theme.border)),
+                .border_style(Style::default().fg(app.config.theme.border())),
         );
     f.render_widget(footer, chunks[2]);
 }
 
-fn draw_test<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+fn draw_test(f: &mut Frame, app: &mut App) {
     if let Some(test) = &app.test {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
@@ -124,12 +123,12 @@ fn draw_test<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         // Title with mode
         let title = format!("Typing Test - {}", app.current_mode.display_name());
         let title_widget = Paragraph::new(title)
-            .style(Style::default().fg(app.config.theme.accent))
+            .style(Style::default().fg(app.config.theme.accent()))
             .alignment(Alignment::Center)
             .block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .border_style(Style::default().fg(app.config.theme.border)),
+                    .border_style(Style::default().fg(app.config.theme.border())),
             );
         f.render_widget(title_widget, chunks[0]);
 
@@ -141,18 +140,18 @@ fn draw_test<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 
         // Instructions
         let instructions = Paragraph::new("Type the text above. Press Esc to return to menu.")
-            .style(Style::default().fg(app.config.theme.muted))
+            .style(Style::default().fg(app.config.theme.muted()))
             .alignment(Alignment::Center)
             .block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .border_style(Style::default().fg(app.config.theme.border)),
+                    .border_style(Style::default().fg(app.config.theme.border())),
             );
         f.render_widget(instructions, chunks[3]);
     }
 }
 
-fn draw_test_progress<B: Backend>(f: &mut Frame<B>, area: Rect, app: &App, test: &crate::test::Test) {
+fn draw_test_progress(f: &mut Frame, area: Rect, app: &App, test: &crate::test::Test) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(60), Constraint::Percentage(40)])
@@ -182,9 +181,9 @@ fn draw_test_progress<B: Backend>(f: &mut Frame<B>, area: Rect, app: &App, test:
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(app.config.theme.border)),
+                .border_style(Style::default().fg(app.config.theme.border())),
         )
-        .gauge_style(Style::default().fg(app.config.theme.accent))
+        .gauge_style(Style::default().fg(app.config.theme.accent()))
         .ratio(progress)
         .label(progress_label);
 
@@ -198,18 +197,18 @@ fn draw_test_progress<B: Backend>(f: &mut Frame<B>, area: Rect, app: &App, test:
     ];
 
     let stats_widget = Paragraph::new(stats_text)
-        .style(Style::default().fg(app.config.theme.text))
+        .style(Style::default().fg(app.config.theme.text()))
         .block(
             Block::default()
                 .title("Live Stats")
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(app.config.theme.border)),
+                .border_style(Style::default().fg(app.config.theme.border())),
         );
 
     f.render_widget(stats_widget, chunks[1]);
 }
 
-fn draw_text_area<B: Backend>(f: &mut Frame<B>, area: Rect, app: &App, test: &crate::test::Test) {
+fn draw_text_area(f: &mut Frame, area: Rect, app: &App, test: &crate::test::Test) {
     let text = test.get_text();
     let typed = app.input_handler.get_typed_text();
     let current_pos = typed.len();
@@ -220,20 +219,20 @@ fn draw_text_area<B: Backend>(f: &mut Frame<B>, area: Rect, app: &App, test: &cr
             // Already typed
             if let Some(typed_char) = typed.chars().nth(i) {
                 if typed_char == ch {
-                    Style::default().fg(app.config.theme.correct)
+                    Style::default().fg(app.config.theme.correct())
                 } else {
-                    Style::default().fg(app.config.theme.error).bg(Color::Red)
+                    Style::default().fg(app.config.theme.error()).bg(Color::Red)
                 }
             } else {
-                Style::default().fg(app.config.theme.text)
+                Style::default().fg(app.config.theme.text())
             }
         } else if i == current_pos {
             Style::default()
-                .fg(app.config.theme.text)
-                .bg(app.config.theme.cursor)
+                .fg(app.config.theme.text())
+                .bg(app.config.theme.cursor())
                 .add_modifier(Modifier::UNDERLINED)
         } else {
-            Style::default().fg(app.config.theme.muted)
+            Style::default().fg(app.config.theme.muted())
         };
 
         spans.push(Span::styled(ch.to_string(), style));
@@ -244,7 +243,7 @@ fn draw_text_area<B: Backend>(f: &mut Frame<B>, area: Rect, app: &App, test: &cr
             Block::default()
                 .title("Text to Type")
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(app.config.theme.border)),
+                .border_style(Style::default().fg(app.config.theme.border())),
         )
         .wrap(Wrap { trim: false })
         .alignment(Alignment::Left);
@@ -252,7 +251,7 @@ fn draw_text_area<B: Backend>(f: &mut Frame<B>, area: Rect, app: &App, test: &cr
     f.render_widget(text_paragraph, area);
 }
 
-fn draw_results<B: Backend>(f: &mut Frame<B>, app: &App) {
+fn draw_results(f: &mut Frame, app: &App) {
     if let Some(stats) = &app.last_stats {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
@@ -264,12 +263,12 @@ fn draw_results<B: Backend>(f: &mut Frame<B>, app: &App) {
             .split(f.size());
 
         let title = Paragraph::new("🎉 Test Results")
-            .style(Style::default().fg(app.config.theme.accent))
+            .style(Style::default().fg(app.config.theme.accent()))
             .alignment(Alignment::Center)
             .block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .border_style(Style::default().fg(app.config.theme.border)),
+                    .border_style(Style::default().fg(app.config.theme.border())),
             );
         f.render_widget(title, chunks[0]);
 
@@ -280,46 +279,46 @@ fn draw_results<B: Backend>(f: &mut Frame<B>, app: &App) {
 
         let primary_stats = vec![
             Line::from(vec![
-                Span::styled("WPM: ", Style::default().fg(app.config.theme.text)),
+                Span::styled("WPM: ", Style::default().fg(app.config.theme.text())),
                 Span::styled(
                     format!("{:.0}", stats.wpm),
                     Style::default()
-                        .fg(app.config.theme.accent)
+                        .fg(app.config.theme.accent())
                         .add_modifier(Modifier::BOLD),
                 ),
             ]),
             Line::from(vec![
-                Span::styled("Raw WPM: ", Style::default().fg(app.config.theme.text)),
+                Span::styled("Raw WPM: ", Style::default().fg(app.config.theme.text())),
                 Span::styled(
                     format!("{:.0}", stats.raw_wpm),
-                    Style::default().fg(app.config.theme.text),
+                    Style::default().fg(app.config.theme.text()),
                 ),
             ]),
             Line::from(vec![
-                Span::styled("Accuracy: ", Style::default().fg(app.config.theme.text)),
+                Span::styled("Accuracy: ", Style::default().fg(app.config.theme.text())),
                 Span::styled(
                     format!("{:.1}%", stats.accuracy * 100.0),
                     Style::default().fg(if stats.accuracy > 0.95 {
-                        app.config.theme.correct
+                        app.config.theme.correct()
                     } else if stats.accuracy > 0.90 {
-                        app.config.theme.accent
+                        app.config.theme.accent()
                     } else {
-                        app.config.theme.error
+                        app.config.theme.error()
                     }),
                 ),
             ]),
             Line::from(vec![
-                Span::styled("Errors: ", Style::default().fg(app.config.theme.text)),
+                Span::styled("Errors: ", Style::default().fg(app.config.theme.text())),
                 Span::styled(
                     stats.error_count.to_string(),
-                    Style::default().fg(app.config.theme.error),
+                    Style::default().fg(app.config.theme.error()),
                 ),
             ]),
             Line::from(vec![
-                Span::styled("Characters: ", Style::default().fg(app.config.theme.text)),
+                Span::styled("Characters: ", Style::default().fg(app.config.theme.text())),
                 Span::styled(
                     format!("{}/{}", stats.correct_chars, stats.total_chars),
-                    Style::default().fg(app.config.theme.text),
+                    Style::default().fg(app.config.theme.text()),
                 ),
             ]),
         ];
@@ -329,9 +328,9 @@ fn draw_results<B: Backend>(f: &mut Frame<B>, app: &App) {
                 Block::default()
                     .title("Statistics")
                     .borders(Borders::ALL)
-                    .border_style(Style::default().fg(app.config.theme.border)),
+                    .border_style(Style::default().fg(app.config.theme.border())),
             )
-            .style(Style::default().fg(app.config.theme.text));
+            .style(Style::default().fg(app.config.theme.text()));
 
         f.render_widget(primary_panel, main_chunks[0]);
 
@@ -343,14 +342,14 @@ fn draw_results<B: Backend>(f: &mut Frame<B>, app: &App) {
 
         let additional_info = vec![
             Line::from(vec![
-                Span::styled("Duration: ", Style::default().fg(app.config.theme.text)),
-                Span::styled(duration_text, Style::default().fg(app.config.theme.text)),
+                Span::styled("Duration: ", Style::default().fg(app.config.theme.text())),
+                Span::styled(duration_text, Style::default().fg(app.config.theme.text())),
             ]),
             Line::from(vec![
-                Span::styled("Mode: ", Style::default().fg(app.config.theme.text)),
+                Span::styled("Mode: ", Style::default().fg(app.config.theme.text())),
                 Span::styled(
                     app.current_mode.display_name(),
-                    Style::default().fg(app.config.theme.accent),
+                    Style::default().fg(app.config.theme.accent()),
                 ),
             ]),
             Line::from(""),
@@ -358,10 +357,10 @@ fn draw_results<B: Backend>(f: &mut Frame<B>, app: &App) {
         ];
         let mut info_lines = additional_info;
         let mut error_list: Vec<_> = stats.error_frequency.iter().collect();
-        error_list.sort_by_key(|(_, &count)| std::cmp::Reverse(count));
+        error_list.sort_by_key(|&(_, &count)| std::cmp::Reverse(count));
 
-        for (i, (&ch, &count)) in error_list.iter().take(5).enumerate() {
-            if count > 0 {
+        for (_i, &(ch, count)) in error_list.iter().take(5).enumerate() {
+            if *count > 0 {
                 info_lines.push(Line::from(format!("  {}: {} times", ch, count)));
             }
         }
@@ -371,25 +370,25 @@ fn draw_results<B: Backend>(f: &mut Frame<B>, app: &App) {
                 Block::default()
                     .title("Details")
                     .borders(Borders::ALL)
-                    .border_style(Style::default().fg(app.config.theme.border)),
+                    .border_style(Style::default().fg(app.config.theme.border())),
             )
-            .style(Style::default().fg(app.config.theme.text));
+            .style(Style::default().fg(app.config.theme.text()));
 
         f.render_widget(additional_panel, main_chunks[1]);
 
         let instructions = Paragraph::new("Press R to restart test, M to return to menu")
-            .style(Style::default().fg(app.config.theme.muted))
+            .style(Style::default().fg(app.config.theme.muted()))
             .alignment(Alignment::Center)
             .block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .border_style(Style::default().fg(app.config.theme.border)),
+                    .border_style(Style::default().fg(app.config.theme.border())),
             );
         f.render_widget(instructions, chunks[2]);
     }
 }
 
-fn draw_history<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+fn draw_history(f: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -400,24 +399,24 @@ fn draw_history<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .split(f.size());
 
     let title = Paragraph::new("📊 Test History")
-        .style(Style::default().fg(app.config.theme.accent))
+        .style(Style::default().fg(app.config.theme.accent()))
         .alignment(Alignment::Center)
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(app.config.theme.border)),
+                .border_style(Style::default().fg(app.config.theme.border())),
         );
     f.render_widget(title, chunks[0]);
 
     let results = app.history.get_results();
     if results.is_empty() {
         let empty_msg = Paragraph::new("No test results yet. Complete a test to see your history!")
-            .style(Style::default().fg(app.config.theme.muted))
+            .style(Style::default().fg(app.config.theme.muted()))
             .alignment(Alignment::Center)
             .block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .border_style(Style::default().fg(app.config.theme.border)),
+                    .border_style(Style::default().fg(app.config.theme.border())),
             );
         f.render_widget(empty_msg, chunks[1]);
     } else {
@@ -427,10 +426,10 @@ fn draw_history<B: Backend>(f: &mut Frame<B>, app: &mut App) {
             .map(|(i, result)| {
                 let style = if i == app.selected_history_item {
                     Style::default()
-                        .fg(app.config.theme.highlight)
+                        .fg(app.config.theme.highlight())
                         .add_modifier(Modifier::BOLD)
                 } else {
-                    Style::default().fg(app.config.theme.text)
+                    Style::default().fg(app.config.theme.text())
                 };
 
                 let date_str = result.timestamp.format("%Y-%m-%d %H:%M").to_string();
@@ -450,28 +449,25 @@ fn draw_history<B: Backend>(f: &mut Frame<B>, app: &mut App) {
             })
             .collect();
 
-        let mut list_state = ListState::default();
-        list_state.select(Some(app.selected_history_item));
-
         let history_list = List::new(history_items)
             .block(
                 Block::default()
                     .title(format!("History ({} tests)", results.len()))
                     .borders(Borders::ALL)
-                    .border_style(Style::default().fg(app.config.theme.border)),
+                    .border_style(Style::default().fg(app.config.theme.border())),
             )
-            .style(Style::default().fg(app.config.theme.text));
+            .style(Style::default().fg(app.config.theme.text()));
 
-        f.render_stateful_widget(history_list, chunks[1], &mut list_state);
+        f.render_widget(history_list, chunks[1]);
     }
 
     let instructions = Paragraph::new("↑/↓ to navigate, M or Esc to return to menu")
-        .style(Style::default().fg(app.config.theme.muted))
+        .style(Style::default().fg(app.config.theme.muted()))
         .alignment(Alignment::Center)
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(app.config.theme.border)),
+                .border_style(Style::default().fg(app.config.theme.border())),
         );
     f.render_widget(instructions, chunks[2]);
 }

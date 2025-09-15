@@ -19,7 +19,7 @@ mod test;
 mod ui;
 mod utils;
 
-use app::{App};
+use app::App;
 
 fn main() -> Result<()> {
     enable_raw_mode()?;
@@ -27,8 +27,8 @@ fn main() -> Result<()> {
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
-    let app = App::new();
-    let res = run_app(&mut terminal, App);
+    let app = App::new()?; // Fixed: App::new() returns Result
+    let res = run_app(&mut terminal, app); // Fixed: pass app directly
     disable_raw_mode()?;
     execute!(
         terminal.backend_mut(),
@@ -47,7 +47,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> Result<()> {
             if key.code == KeyCode::Char('q') && app.can_quit() {
                 return Ok(());
             }
-            app.handle_key_event(key);
+            app.handle_key_event(key)?;
             if app.should_quit {
                 return Ok(());
             }

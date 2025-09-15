@@ -3,8 +3,6 @@ use crossterm::event::{KeyCode, KeyEvent};
 
 use crate::{config::Config, history::History, input::InputHandler, stats::Stats, test::Test};
 
-pub type AppResult<T> = Result<T, Box<dyn std::error::Error + Send + Sync>>;
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum Screen {
     Menu,
@@ -49,9 +47,9 @@ pub struct App {
 }
 
 impl App {
-    pub fn new() -> AppResult<Self> {
-        let config = Config::load()?;
-        let history = History::load()?;
+    pub fn new() -> Result<Self> {
+        let config = Config::load().map_err(|e| anyhow::anyhow!("{}", e))?;
+        let history = History::load().map_err(|e| anyhow::anyhow!("{}", e))?;
 
         let available_modes = vec![
             TestMode::Timed(30),
@@ -90,7 +88,7 @@ impl App {
         matches!(self.current_screen, Screen::Menu | Screen::Results | Screen::History)
     }
 
-    pub fn handle_key_event(&mut self, key: KeyEvent) -> AppResult<()> {
+    pub fn handle_key_event(&mut self, key: KeyEvent) -> Result<()> {
         match self.current_screen {
             Screen::Menu => self.handle_menu_key(key),
             Screen::Test => self.handle_test_key(key),
@@ -99,7 +97,7 @@ impl App {
         }
     }
 
-    fn handle_menu_key(&mut self, key: KeyEvent) -> AppResult<()> {
+    fn handle_menu_key(&mut self, key: KeyEvent) -> Result<()> {
         match key.code {
             KeyCode::Up | KeyCode::Char('k') => {
                 if self.selected_menu_item > 0 {
@@ -129,17 +127,17 @@ impl App {
         Ok(())
     }
 
-    fn handle_test_key(&mut self, key: KeyEvent) -> AppResult<()> {
+    fn handle_test_key(&mut self, key: KeyEvent) -> Result<()> {
         if key.code == KeyCode::Esc {
             self.current_screen = Screen::Menu;
             self.test = None;
             return Ok(());
         }
         if let Some(test) = &mut self.test {
-            self.input_handler.handle_key(key, test)?;
+            self.input_handler.handle_key(key, test).map_err(|e| anyhow::anyhow!("{}", e))?;
             if test.is_complete() {
                 let stats = Stats::calculate(test, &self.input_handler);
-                self.history.add_result(&stats)?;
+                self.history.add_result(&stats).map_err(|e| anyhow::anyhow!("{}", e))?;
                 self.last_stats = Some(stats);
                 self.current_screen = Screen::Results;
                 self.test = None;
@@ -148,7 +146,7 @@ impl App {
         Ok(())
     }
 
-    fn handle_results_key(&mut self, key: KeyEvent) -> AppResult<()> {
+    fn handle_results_key(&mut self, key: KeyEvent) -> Result<()> {
         match key.code {
             KeyCode::Char('r') | KeyCode::Char('R') => {
                 self.start_test()?;
@@ -161,7 +159,7 @@ impl App {
         Ok(())
     }
 
-    fn handle_history_key(&mut self, key: KeyEvent) -> AppResult<()> {
+    fn handle_history_key(&mut self, key: KeyEvent) -> Result<()> {
         match key.code {
             KeyCode::Up | KeyCode::Char('k') => {
                 if self.selected_history_item > 0 {
@@ -182,8 +180,8 @@ impl App {
         Ok(())
     }
 
-    fn start_test(&mut self) -> AppResult<()> {
-        self.test = Some(Test::new(&self.current_mode, &self.config)?);
+    fn start_test(&mut self) -> Result<()> {
+        self.test = Some(Test::new(&self.current_mode, &self.config).map_err(|e| anyhow::anyhow!("{}", e))?);
         self.input_handler = InputHandler::new();
         self.current_screen = Screen::Test;
         Ok(())

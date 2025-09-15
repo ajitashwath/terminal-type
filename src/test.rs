@@ -14,12 +14,12 @@ impl Test {
     pub fn new(mode: &TestMode, config: &Config) -> Result<Self, Box<dyn std::error::Error>> {
         let (text, duration_limit, word_limit) = match mode {
             TestMode::Timed(seconds) => {
-                let text = Self::generate_text_for_duration(*seconds, config)?;
+                let text = Self::generate_text_for_duration(*seconds as usize, config)?;
                 (text, Some(Duration::from_secs(*seconds as u64)), None)
             }
             TestMode::WordCount(count) => {
-                let text = utils::generate_random_words(*count);
-                (text, None, Some(*count))
+                let text = utils::generate_random_words(*count as usize);
+                (text, None, Some(*count as usize))
             }
             TestMode::Text(custom_text) => {
                 (custom_text.clone(), None, None)
