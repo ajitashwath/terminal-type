@@ -51,15 +51,16 @@ impl InputHandler {
 
     fn handle_character(&mut self, ch: char, timestamp: Instant, test: &Test) {
         let target_text = test.get_text();
-        let current_pos = self.typed_text.chars().count(); // Use char count, not byte length
+        let target_chars: Vec<char> = target_text.chars().collect();
+        let current_pos = self.typed_text.chars().count();
         
         // Don't allow typing beyond the target text
-        if current_pos >= target_text.chars().count() { 
+        if current_pos >= target_chars.len() { 
             return; 
         }
         
-        let expected_char = target_text.chars().nth(current_pos);
-        let is_correct = expected_char == Some(ch);
+        let expected_char = target_chars.get(current_pos);
+        let is_correct = expected_char == Some(&ch);
         
         self.typed_text.push(ch);
         self.keystrokes.push(KeystrokeData { 

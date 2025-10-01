@@ -273,23 +273,19 @@ fn draw_test_progress(f: &mut Frame, area: Rect, app: &App, test: &crate::test::
 fn draw_text_area(f: &mut Frame, area: Rect, app: &App, test: &crate::test::Test) {
     let text = test.get_text();
     let typed = app.input_handler.get_typed_text();
-    let current_pos = typed.chars().count(); // Use char count for proper positioning
+    let current_pos = typed.chars().count();
     let mut spans = Vec::new();
 
     let text_chars: Vec<char> = text.chars().collect();
     let typed_chars: Vec<char> = typed.chars().collect();
 
     for (i, &ch) in text_chars.iter().enumerate() {
-        let style = if i < current_pos {
-            // Already typed
-            if let Some(&typed_char) = typed_chars.get(i) {
-                if typed_char == ch {
-                    Style::default().fg(app.config.theme.correct())
-                } else {
-                    Style::default().fg(app.config.theme.error()).bg(Color::Red)
-                }
+        let style = if i < typed_chars.len() {
+            let typed_char = typed_chars[i];
+            if typed_char == ch {
+                Style::default().fg(app.config.theme.correct())
             } else {
-                Style::default().fg(app.config.theme.text())
+                Style::default().fg(app.config.theme.error()).bg(Color::Red)
             }
         } else if i == current_pos {
             Style::default()
